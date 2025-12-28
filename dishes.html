@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #f5f5f5;
@@ -14,80 +18,114 @@
     }
 
     h2 {
-      margin-top: 0;
+      margin: 10px 0;
+      color: #e23744;
     }
 
     .card {
       background: #fff;
       padding: 15px;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 15px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    input, select, button {
+    input, select {
       width: 100%;
-      padding: 10px;
-      margin-top: 8px;
+      padding: 12px;
+      margin-top: 10px;
       font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      font-size: 16px;
       background: #e23744;
       color: #fff;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
     }
 
+    button:active {
+      opacity: 0.85;
+    }
+
     .dish {
-      border-bottom: 1px solid #ddd;
-      padding: 8px 0;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .dish:last-child {
+      border-bottom: none;
+    }
+
+    .back {
+      margin-bottom: 15px;
+      background: #333;
     }
   </style>
 </head>
 
 <body>
 
-<h2>🍽️ Add Dish</h2>
+<button class="back" onclick="goBack()">⬅ Back to Admin</button>
+
+<h2>🍽 Add Dish</h2>
 
 <div class="card">
-  <select id="restaurant"></select>
+  <select id="restaurant">
+    <option value="">Select Restaurant</option>
+  </select>
 
   <input id="name" placeholder="Dish Name" />
   <input id="price" type="number" placeholder="Price (₹)" />
+
   <select id="type">
     <option value="">Select Type</option>
     <option value="VEG">VEG</option>
     <option value="NON_VEG">NON VEG</option>
   </select>
+
   <input id="image" placeholder="Image URL" />
 
-  <button onclick="addDish()">Add Dish</button>
+  <button onclick="addDish()">➕ Add Dish</button>
 </div>
 
 <h2>📋 Dishes</h2>
 
 <div class="card" id="dishList">
-  Select restaurant
+  Select restaurant to view dishes
 </div>
 
 <script>
 const API = "https://harshuu2-backend.onrender.com/api";
 
+function goBack() {
+  window.location.href = "index.html";
+}
+
 async function loadRestaurants() {
-  const res = await fetch(API + "/restaurants");
-  const data = await res.json();
+  try {
+    const res = await fetch(API + "/restaurants");
+    const data = await res.json();
 
-  const select = document.getElementById("restaurant");
-  select.innerHTML = `<option value="">Select Restaurant</option>`;
+    const select = document.getElementById("restaurant");
+    select.innerHTML = `<option value="">Select Restaurant</option>`;
 
-  data.data.forEach(r => {
-    const opt = document.createElement("option");
-    opt.value = r._id;
-    opt.textContent = r.name;
-    select.appendChild(opt);
-  });
+    data.data.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r._id;
+      opt.textContent = r.name;
+      select.appendChild(opt);
+    });
+  } catch (err) {
+    alert("Failed to load restaurants");
+  }
 }
 
 async function addDish() {
@@ -98,50 +136,80 @@ async function addDish() {
   const image = document.getElementById("image").value.trim();
 
   if (!restaurantId || !name || !price || !type || !image) {
-    alert("All fields required");
+    alert("All fields are required");
     return;
   }
 
-  const res = await fetch(API + "/admin/dish", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ restaurantId, name, price, type, image })
-  });
+  try {
+    const res = await fetch(API + "/admin/dish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        restaurantId,
+        name,
+        price,
+        type,
+        image
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.success) {
-    alert("Dish Added");
-    loadDishes();
-  } else {
-    alert(data.message || "Error");
+    if (data.success) {
+      alert("✅ Dish added successfully");
+
+      document.getElementById("name").value = "";
+      document.getElementById("price").value = "";
+      document.getElementById("type").value = "";
+      document.getElementById("image").value = "";
+
+      loadDishes();
+    } else {
+      alert(data.message || "Error adding dish");
+    }
+  } catch (err) {
+    alert("Server error");
   }
 }
 
 async function loadDishes() {
   const restaurantId = document.getElementById("restaurant").value;
-  if (!restaurantId) return;
-
-  const res = await fetch(API + "/dishes/restaurant/" + restaurantId);
-  const data = await res.json();
-
-  const list = document.getElementById("dishList");
-  list.innerHTML = "";
-
-  if (!data.data.length) {
-    list.innerHTML = "No dishes found";
+  if (!restaurantId) {
+    document.getElementById("dishList").innerHTML =
+      "Select restaurant to view dishes";
     return;
   }
 
-  data.data.forEach(d => {
-    const div = document.createElement("div");
-    div.className = "dish";
-    div.innerHTML = `<b>${d.name}</b> – ₹${d.price} (${d.type})`;
-    list.appendChild(div);
-  });
+  try {
+    const res = await fetch(API + "/dishes/restaurant/" + restaurantId);
+    const data = await res.json();
+
+    const list = document.getElementById("dishList");
+    list.innerHTML = "";
+
+    if (!data.data || data.data.length === 0) {
+      list.innerHTML = "No dishes found";
+      return;
+    }
+
+    data.data.forEach(d => {
+      const div = document.createElement("div");
+      div.className = "dish";
+      div.innerHTML = `
+        <b>${d.name}</b><br>
+        ₹${d.price} • ${d.type}
+      `;
+      list.appendChild(div);
+    });
+  } catch (err) {
+    document.getElementById("dishList").innerHTML =
+      "Failed to load dishes";
+  }
 }
 
-document.getElementById("restaurant").addEventListener("change", loadDishes);
+document
+  .getElementById("restaurant")
+  .addEventListener("change", loadDishes);
 
 loadRestaurants();
 </script>
