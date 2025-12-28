@@ -1,0 +1,60 @@
+<!-- harshuu-admin/dishes.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HARSHUU Admin – Dishes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<header class="top-header">
+  <div class="logo">HARSHUU</div>
+  <div class="header-actions">
+    <span class="icon">🔔</span>
+    <div class="profile">Admin ▾</div>
+  </div>
+</header>
+
+<aside class="sidebar">
+  <a href="index.html">Dashboard</a>
+  <a href="restaurants.html">Restaurants</a>
+  <a class="active" href="dishes.html">Dishes / Menu</a>
+  <a href="orders.html">Orders</a>
+  <a href="payments.html">Payments & QR</a>
+  <a href="#">Billing / Invoices</a>
+  <a href="#">Settings</a>
+</aside>
+
+<main class="main">
+  <h2>Dishes Management</h2>
+
+  <div class="page-header">
+    <select id="restaurantSelect"></select>
+    <button class="btn-primary" onclick="openAddDish()">Add Dish</button>
+  </div>
+
+  <section id="dishGrid" class="grid"></section>
+</main>
+
+<!-- ADD DISH MODAL -->
+<div id="dishModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>Add Dish</h3>
+    <input id="dishName" placeholder="Dish Name">
+    <input id="dishPrice" type="number" placeholder="Price">
+    <select id="dishType">
+      <option value="VEG">VEG</option>
+      <option value="NON_VEG">NON-VEG</option>
+    </select>
+    <input id="dishImage" placeholder="Image URL">
+    <button class="btn-primary" onclick="saveDish()">Save Dish</button>
+    <button onclick="closeAddDish()">Cancel</button>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/dishes.js"></script>
+</body>
+</html>
