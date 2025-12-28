@@ -1,96 +1,63 @@
-/* ================================
-   HARSHUU 2.0 – Orders Admin JS
-   Used in orders.html
-================================ */
+// harshuu-admin/js/orders.js
 
-const orderList = document.getElementById("orderList");
+const table = document.getElementById("ordersTable");
 
-/* ================================
-   LOAD ORDERS
-================================ */
 async function loadOrders() {
-  orderList.innerHTML = "Loading orders...";
+  const res = await fetch(API_BASE + "/orders");
+  const json = await res.json();
 
-  try {
-    const res = await getOrders(); // from api.js
-    const orders = res.data;
-
-    if (!orders || orders.length === 0) {
-      orderList.innerHTML = "No orders found";
-      return;
-    }
-
-    orderList.innerHTML = "";
-
-    orders.forEach(o => {
-      const div = document.createElement("div");
-      div.className = "card";
-
-      let itemsHtml = "";
-      o.items.forEach(i => {
-        itemsHtml += `<div class="item">• ${i.name} × ${i.quantity}</div>`;
-      });
-
-      div.innerHTML = `
-        <h3>Order</h3>
-        <p><b>Customer:</b> ${o.customer.name}</p>
-        <p><b>Mobile:</b> ${o.customer.mobile}</p>
-        <p><b>Total:</b> ₹${o.bill?.grandTotal || o.grandTotal}</p>
-
-        <p>Status:
-          <span class="${
-            o.status === "DELIVERED" ? "status-open" : "status-closed"
-          }">
-            ${o.status}
-          </span>
-        </p>
-
-        <select id="status-${o._id}">
-          <option value="">Change Status</option>
-          <option value="ACCEPTED">ACCEPTED</option>
-          <option value="PREPARING">PREPARING</option>
-          <option value="OUT_FOR_DELIVERY">OUT FOR DELIVERY</option>
-          <option value="DELIVERED">DELIVERED</option>
-          <option value="CANCELLED">CANCELLED</option>
-        </select>
-
-        <button onclick="changeStatus('${o._id}')">
-          Update Status
-        </button>
-
-        <div class="badge">Items</div>
-        ${itemsHtml}
-      `;
-
-      orderList.appendChild(div);
-    });
-
-  } catch (err) {
-    orderList.innerHTML = "Error loading orders";
-  }
-}
-
-/* ================================
-   UPDATE ORDER STATUS
-================================ */
-async function changeStatus(orderId) {
-  const status = document.getElementById(`status-${orderId}`).value;
-
-  if (!status) {
-    alert("Select status first");
+  if (!json.success) {
+    alert("Failed to load orders");
     return;
   }
 
-  if (!confirm("Change order status?")) return;
-
-  try {
-    await updateOrderStatus(orderId, status);
-    alert("Order status updated");
-    loadOrders();
-  } catch (err) {}
+  table.innerHTML = json.data.map(o => `
+    <tr>
+      <td>#${o._id.slice(-6)}</td>
+      <td>${o.customer.name || "Customer"}</td>
+      <td>${o.restaurant?.name || "-"}</td>
+      <td>${o.bill.grandTotal}</td>
+      <td>
+        <span class="status ${statusClass(o.status)}">${o.status}</span>
+      </td>
+      <td>
+        <select onchange="updateStatus('${o._id}', this.value)">
+          ${statusOptions(o.status)}
+        </select>
+      </td>
+    </tr>
+  `).join("");
 }
 
-/* ================================
-   INIT
-================================ */
+function statusClass(status) {
+  if (status === "DELIVERED") return "delivered";
+  if (status === "CANCELLED") return "cancelled";
+  return "pending";
+}
+
+function statusOptions(current) {
+  const statuses = ["CREATED", "CONFIRMED", "DELIVERED", "CANCELLED"];
+  return statuses.map(s =>
+    `<option value="${s}" ${s === current ? "selected" : ""}>${s}</option>`
+  ).join("");
+}
+
+async function updateStatus(orderId, status) {
+  const res = await fetch(API_BASE + `/orders/${orderId}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ status })
+  });
+
+  const json = await res.json();
+
+  if (json.success) {
+    loadOrders();
+  } else {
+    alert(json.message || "Failed to update status");
+  }
+}
+
 loadOrders();
