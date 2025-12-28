@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #f5f5f5;
@@ -14,47 +18,69 @@
     }
 
     h2 {
-      margin-top: 0;
+      margin: 10px 0;
+      color: #e23744;
     }
 
     .card {
       background: #fff;
       padding: 15px;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 15px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    input, button {
+    input {
       width: 100%;
-      padding: 10px;
-      margin-top: 8px;
+      padding: 12px;
+      margin-top: 10px;
       font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      font-size: 16px;
       background: #e23744;
       color: #fff;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
     }
 
+    button:active {
+      opacity: 0.85;
+    }
+
     .restaurant {
-      border-bottom: 1px solid #ddd;
-      padding: 8px 0;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .restaurant:last-child {
+      border-bottom: none;
+    }
+
+    .back {
+      margin-bottom: 15px;
+      background: #333;
     }
   </style>
 </head>
 
 <body>
 
-  <h2>🍴 Add Restaurant</h2>
+  <button class="back" onclick="goBack()">⬅ Back to Admin</button>
+
+  <h2>🏪 Add Restaurant</h2>
 
   <div class="card">
     <input id="name" placeholder="Restaurant Name" />
     <input id="image" placeholder="Image URL" />
-    <button onclick="addRestaurant()">Add Restaurant</button>
+    <button onclick="addRestaurant()">➕ Add Restaurant</button>
   </div>
 
   <h2>📋 All Restaurants</h2>
@@ -64,53 +90,65 @@
   </div>
 
 <script>
-const API_BASE = "https://harshuu2-backend.onrender.com/api";
+const API = "https://harshuu2-backend.onrender.com/api";
+
+function goBack() {
+  window.location.href = "index.html";
+}
 
 async function addRestaurant() {
   const name = document.getElementById("name").value.trim();
   const image = document.getElementById("image").value.trim();
 
   if (!name || !image) {
-    alert("Name & Image required");
+    alert("Restaurant name and image are required");
     return;
   }
 
-  const res = await fetch(API_BASE + "/admin/restaurant", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, image })
-  });
+  try {
+    const res = await fetch(API + "/admin/restaurant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, image })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.success) {
-    alert("Restaurant Added");
-    document.getElementById("name").value = "";
-    document.getElementById("image").value = "";
-    loadRestaurants();
-  } else {
-    alert(data.message || "Error");
+    if (data.success) {
+      alert("✅ Restaurant added successfully");
+      document.getElementById("name").value = "";
+      document.getElementById("image").value = "";
+      loadRestaurants();
+    } else {
+      alert(data.message || "Something went wrong");
+    }
+  } catch (err) {
+    alert("Server error");
   }
 }
 
 async function loadRestaurants() {
-  const res = await fetch(API_BASE + "/restaurants");
-  const data = await res.json();
+  try {
+    const res = await fetch(API + "/restaurants");
+    const data = await res.json();
 
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+    const list = document.getElementById("list");
+    list.innerHTML = "";
 
-  if (!data.data.length) {
-    list.innerHTML = "No restaurants found";
-    return;
+    if (!data.data || data.data.length === 0) {
+      list.innerHTML = "No restaurants added yet";
+      return;
+    }
+
+    data.data.forEach(r => {
+      const div = document.createElement("div");
+      div.className = "restaurant";
+      div.innerHTML = `<b>${r.name}</b>`;
+      list.appendChild(div);
+    });
+  } catch (err) {
+    document.getElementById("list").innerHTML = "Failed to load restaurants";
   }
-
-  data.data.forEach(r => {
-    const div = document.createElement("div");
-    div.className = "restaurant";
-    div.innerHTML = `<b>${r.name}</b>`;
-    list.appendChild(div);
-  });
 }
 
 loadRestaurants();
