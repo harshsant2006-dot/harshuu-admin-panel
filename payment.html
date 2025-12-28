@@ -1,0 +1,66 @@
+<!-- harshuu-admin/payments.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HARSHUU Admin – Payments & QR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<header class="top-header">
+  <div class="logo">HARSHUU</div>
+  <div class="header-actions">
+    <span class="icon">🔔</span>
+    <div class="profile">Admin ▾</div>
+  </div>
+</header>
+
+<aside class="sidebar">
+  <a href="index.html">Dashboard</a>
+  <a href="restaurants.html">Restaurants</a>
+  <a href="dishes.html">Dishes / Menu</a>
+  <a href="orders.html">Orders</a>
+  <a class="active" href="payments.html">Payments & QR</a>
+  <a href="#">Billing / Invoices</a>
+  <a href="#">Settings</a>
+</aside>
+
+<main class="main">
+  <h2>Payment Settings</h2>
+
+  <section class="card">
+    <h3>UPI QR Code</h3>
+    <div class="qr-box">
+      <img id="qrPreview" src="" alt="UPI QR">
+    </div>
+    <input type="text" id="upiQrImage" placeholder="Paste QR Image URL / Base64">
+  </section>
+
+  <section class="card grid-2">
+    <div>
+      <label>Platform Fee (₹)</label>
+      <input type="number" id="platformFee">
+    </div>
+    <div>
+      <label>Handling Charge (₹)</label>
+      <input type="number" id="handlingCharge">
+    </div>
+    <div>
+      <label>Delivery Fee per KM (₹)</label>
+      <input type="number" id="deliveryFeePerKm">
+    </div>
+    <div>
+      <label>GST Percentage (%)</label>
+      <input type="number" id="gstPercentage">
+    </div>
+  </section>
+
+  <button id="saveSettings" class="btn-primary">Save Payment Settings</button>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/payments.js"></script>
+</body>
+</html>
