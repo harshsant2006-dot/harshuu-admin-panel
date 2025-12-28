@@ -13,6 +13,7 @@
 
     h1 {
       text-align: center;
+      color: #e23744;
     }
 
     .box {
@@ -20,12 +21,15 @@
       padding: 15px;
       margin-bottom: 20px;
       border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     input {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     button {
@@ -37,6 +41,7 @@
       border: none;
       font-size: 16px;
       border-radius: 8px;
+      cursor: pointer;
     }
 
     .restaurant {
@@ -44,6 +49,7 @@
       padding: 10px;
       margin-top: 10px;
       border-radius: 6px;
+      border-left: 4px solid #e23744;
     }
   </style>
 </head>
@@ -63,15 +69,20 @@
 
 <div class="box">
   <h3>Restaurants List</h3>
-  <div id="list"></div>
+  <div id="list">Loading...</div>
 </div>
 
 <script>
 const API = "https://harshuu2-backend.onrender.com";
 
 function addRestaurant() {
-  const name = document.getElementById("name").value;
-  const image = document.getElementById("image").value;
+  const name = document.getElementById("name").value.trim();
+  const image = document.getElementById("image").value.trim();
+
+  if (!name || !image) {
+    alert("Please enter name and image");
+    return;
+  }
 
   fetch(API + "/api/admin/restaurant", {
     method: "POST",
@@ -81,8 +92,13 @@ function addRestaurant() {
   .then(res => res.json())
   .then(data => {
     alert(data.message || "Restaurant Added");
+
+    document.getElementById("name").value = "";
+    document.getElementById("image").value = "";
+
     loadRestaurants();
-  });
+  })
+  .catch(() => alert("Server error"));
 }
 
 function loadRestaurants() {
@@ -92,6 +108,11 @@ function loadRestaurants() {
       const box = document.getElementById("list");
       box.innerHTML = "";
 
+      if (!data.data || data.data.length === 0) {
+        box.innerHTML = "No restaurants found";
+        return;
+      }
+
       data.data.forEach(r => {
         box.innerHTML += `
           <div class="restaurant">
@@ -99,6 +120,9 @@ function loadRestaurants() {
           </div>
         `;
       });
+    })
+    .catch(() => {
+      document.getElementById("list").innerHTML = "Failed to load";
     });
 }
 
