@@ -1,55 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>HARSHUU Admin Panel</title>
+  <title>HARSHUU – Admin Panel</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #f5f5f5;
       padding: 20px;
+      margin: 0;
     }
 
     h1 {
       text-align: center;
       color: #e23744;
+      margin-bottom: 30px;
     }
 
-    .box {
+    .container {
+      max-width: 420px;
+      margin: auto;
+    }
+
+    .card {
       background: white;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 10px;
+      padding: 20px;
+      border-radius: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
     }
 
     button {
       width: 100%;
-      padding: 12px;
-      margin-top: 15px;
+      padding: 16px;
+      margin: 15px 0;
+      font-size: 18px;
       background: #e23744;
       color: white;
       border: none;
-      font-size: 16px;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
     }
 
-    .restaurant {
-      background: #fff;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border-left: 4px solid #e23744;
+    button:active {
+      opacity: 0.8;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      color: #777;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -58,75 +64,32 @@
 
 <h1>🍽 HARSHUU Admin Panel</h1>
 
-<div class="box">
-  <h3>Add Restaurant</h3>
+<div class="container">
+  <div class="card">
 
-  <input id="name" placeholder="Restaurant Name">
-  <input id="image" placeholder="Image URL">
+    <button onclick="go('restaurants.html')">
+      🏪 Manage Restaurants
+    </button>
 
-  <button onclick="addRestaurant()">ADD RESTAURANT</button>
-</div>
+    <button onclick="go('dishes.html')">
+      🍲 Manage Dishes
+    </button>
 
-<div class="box">
-  <h3>Restaurants List</h3>
-  <div id="list">Loading...</div>
+    <button onclick="go('orders.html')">
+      📦 View Orders
+    </button>
+
+  </div>
+
+  <div class="footer">
+    HARSHUU 2.0 • Admin Control
+  </div>
 </div>
 
 <script>
-const API = "https://harshuu2-backend.onrender.com";
-
-function addRestaurant() {
-  const name = document.getElementById("name").value.trim();
-  const image = document.getElementById("image").value.trim();
-
-  if (!name || !image) {
-    alert("Please enter name and image");
-    return;
+  function go(page) {
+    window.location.href = page;
   }
-
-  fetch(API + "/api/admin/restaurant", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, image })
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert(data.message || "Restaurant Added");
-
-    document.getElementById("name").value = "";
-    document.getElementById("image").value = "";
-
-    loadRestaurants();
-  })
-  .catch(() => alert("Server error"));
-}
-
-function loadRestaurants() {
-  fetch(API + "/api/restaurants")
-    .then(res => res.json())
-    .then(data => {
-      const box = document.getElementById("list");
-      box.innerHTML = "";
-
-      if (!data.data || data.data.length === 0) {
-        box.innerHTML = "No restaurants found";
-        return;
-      }
-
-      data.data.forEach(r => {
-        box.innerHTML += `
-          <div class="restaurant">
-            <b>${r.name}</b>
-          </div>
-        `;
-      });
-    })
-    .catch(() => {
-      document.getElementById("list").innerHTML = "Failed to load";
-    });
-}
-
-loadRestaurants();
 </script>
 
 </body>
