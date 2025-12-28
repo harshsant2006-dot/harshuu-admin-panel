@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HARSHUU Admin – Restaurants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 15px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      background: #e23744;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .restaurant {
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🍴 Add Restaurant</h2>
+
+  <div class="card">
+    <input id="name" placeholder="Restaurant Name" />
+    <input id="image" placeholder="Image URL" />
+    <button onclick="addRestaurant()">Add Restaurant</button>
+  </div>
+
+  <h2>📋 All Restaurants</h2>
+
+  <div class="card" id="list">
+    Loading...
+  </div>
+
+<script>
+const API_BASE = "https://harshuu2-backend.onrender.com/api";
+
+async function addRestaurant() {
+  const name = document.getElementById("name").value.trim();
+  const image = document.getElementById("image").value.trim();
+
+  if (!name || !image) {
+    alert("Name & Image required");
+    return;
+  }
+
+  const res = await fetch(API_BASE + "/admin/restaurant", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, image })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("Restaurant Added");
+    document.getElementById("name").value = "";
+    document.getElementById("image").value = "";
+    loadRestaurants();
+  } else {
+    alert(data.message || "Error");
+  }
+}
+
+async function loadRestaurants() {
+  const res = await fetch(API_BASE + "/restaurants");
+  const data = await res.json();
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  if (!data.data.length) {
+    list.innerHTML = "No restaurants found";
+    return;
+  }
+
+  data.data.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "restaurant";
+    div.innerHTML = `<b>${r.name}</b>`;
+    list.appendChild(div);
+  });
+}
+
+loadRestaurants();
+</script>
+
+</body>
+</html>
