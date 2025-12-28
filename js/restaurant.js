@@ -1,105 +1,109 @@
-/* ================================
-   HARSHUU 2.0 – Restaurant Admin JS
-   Used in restaurants.html
-================================ */
+// harshuu-admin/js/restaurants.js
 
-// HTML elements
-const restaurantList = document.getElementById("restaurantList");
-const addBtn = document.getElementById("addRestaurantBtn");
+const grid = document.getElementById("restaurantGrid");
+const modal = document.getElementById("restaurantModal");
+const modalTitle = document.getElementById("modalTitle");
 
-// ================================
-// LOAD RESTAURANTS
-// ================================
+const resName = document.getElementById("resName");
+const resImage = document.getElementById("resImage");
+const resAddress = document.getElementById("resAddress");
+
+let editId = null;
+
 async function loadRestaurants() {
-  restaurantList.innerHTML = "Loading restaurants...";
+  const res = await fetch(API_BASE + "/restaurants");
+  const json = await res.json();
+  if (!json.success) return;
 
-  try {
-    const res = await getRestaurants(); // api.js
-    const restaurants = res.data;
-
-    if (!restaurants.length) {
-      restaurantList.innerHTML = "No restaurants found";
-      return;
-    }
-
-    restaurantList.innerHTML = "";
-
-    restaurants.forEach(r => {
-      const div = document.createElement("div");
-      div.className = "card";
-
-      div.innerHTML = `
-        <h3>${r.name}</h3>
-        <p>Status: 
-          <span class="${r.isActive ? "status-open" : "status-closed"}">
-            ${r.isActive ? "ACTIVE" : "INACTIVE"}
-          </span>
-        </p>
-
-        <button onclick="toggle('${r._id}')">
-          ${r.isActive ? "Deactivate" : "Activate"}
+  grid.innerHTML = json.data.map(r => `
+    <div class="card">
+      <img src="${r.image}" style="width:100%;height:140px;object-fit:cover">
+      <h4>${r.name}</h4>
+      <span class="status ${r.isActive ? "delivered" : "cancelled"}">
+        ${r.isActive ? "OPEN" : "CLOSED"}
+      </span>
+      <div class="actions">
+        <button onclick="toggleStatus('${r._id}')">
+          ${r.isActive ? "Close" : "Open"}
         </button>
-
-        <button style="margin-top:6px;background:#555"
-          onclick="removeRestaurant('${r._id}')">
-          Delete
+        <button onclick="editRestaurant('${r._id}','${r.name}','${r.image}','${r.address || ""}')">
+          Edit
         </button>
-      `;
-
-      restaurantList.appendChild(div);
-    });
-
-  } catch (err) {
-    restaurantList.innerHTML = "Error loading restaurants";
-  }
+        <button onclick="deleteRestaurant('${r._id}')">Delete</button>
+      </div>
+    </div>
+  `).join("");
 }
 
-// ================================
-// ADD RESTAURANT
-// ================================
-addBtn.onclick = async () => {
-  const name = document.getElementById("name").value.trim();
-  const image = document.getElementById("image").value.trim();
+function openAddRestaurant() {
+  editId = null;
+  modalTitle.innerText = "Add Restaurant";
+  resName.value = "";
+  resImage.value = "";
+  resAddress.value = "";
+  modal.classList.remove("hidden");
+}
 
-  if (!name || !image) {
-    alert("Name and Image are required");
+function editRestaurant(id, name, image, address) {
+  editId = id;
+  modalTitle.innerText = "Edit Restaurant";
+  resName.value = name;
+  resImage.value = image;
+  resAddress.value = address;
+  modal.classList.remove("hidden");
+}
+
+function closeModal() {
+  modal.classList.add("hidden");
+}
+
+async function saveRestaurant() {
+  const payload = {
+    name: resName.value.trim(),
+    image: resImage.value.trim(),
+    address: resAddress.value.trim()
+  };
+
+  if (!payload.name || !payload.image) {
+    alert("Name and image are required");
     return;
   }
 
-  try {
-    await addRestaurant({ name, image });
-    alert("Restaurant added");
-    document.getElementById("name").value = "";
-    document.getElementById("image").value = "";
-    loadRestaurants();
-  } catch (err) {}
-};
+  const url = editId
+    ? API_BASE + `/restaurants/${editId}`
+    : API_BASE + "/restaurants";
 
-// ================================
-// TOGGLE RESTAURANT
-// ================================
-async function toggle(id) {
-  if (!confirm("Change restaurant status?")) return;
+  const method = editId ? "PATCH" : "POST";
 
-  try {
-    await toggleRestaurant(id);
-    loadRestaurants();
-  } catch (err) {}
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const json = await res.json();
+  if (!json.success) {
+    alert(json.message || "Failed");
+    return;
+  }
+
+  closeModal();
+  loadRestaurants();
 }
 
-// ================================
-// DELETE RESTAURANT
-// ================================
-async function removeRestaurant(id) {
-  if (!confirm("Delete restaurant permanently?")) return;
-
-  try {
-    await deleteRestaurant(id);
-    loadRestaurants();
-  } catch (err) {}
+async function toggleStatus(id) {
+  await fetch(API_BASE + `/restaurants/${id}/status`, {
+    method: "PATCH"
+  });
+  loadRestaurants();
 }
 
-// ================================
-// INIT
-// ================================
+async function deleteRestaurant(id) {
+  if (!confirm("Delete restaurant and all dishes?")) return;
+  await fetch(API_BASE + `/restaurants/${id}`, {
+    method: "DELETE"
+  });
+  loadRestaurants();
+}
+
 loadRestaurants();
