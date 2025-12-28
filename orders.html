@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HARSHUU Admin – Orders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 12px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .order {
+      background: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 5px;
+      background: #ddd;
+      margin-top: 6px;
+    }
+
+    .status {
+      font-weight: bold;
+      color: #e23744;
+    }
+
+    .item {
+      font-size: 14px;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>📦 Orders</h2>
+
+<div id="orderList">Loading orders...</div>
+
+<script>
+const API = "https://harshuu2-backend.onrender.com/api";
+
+async function loadOrders() {
+  try {
+    const res = await fetch(API + "/orders");
+    const data = await res.json();
+
+    const list = document.getElementById("orderList");
+    list.innerHTML = "";
+
+    if (!data.data || !data.data.length) {
+      list.innerHTML = "No orders found";
+      return;
+    }
+
+    data.data.forEach(order => {
+      const div = document.createElement("div");
+      div.className = "order";
+
+      let itemsHtml = "";
+      order.items.forEach(i => {
+        itemsHtml += `<div class="item">• ${i.name} × ${i.quantity}</div>`;
+      });
+
+      div.innerHTML = `
+        <div><b>Order #</b> ${order.orderNumber || order._id}</div>
+        <div><b>Customer:</b> ${order.customer.name}</div>
+        <div><b>Mobile:</b> ${order.customer.mobile}</div>
+        <div><b>Total:</b> ₹${order.bill?.grandTotal || order.grandTotal}</div>
+        <div class="status">Status: ${order.status}</div>
+        <div class="badge">Items</div>
+        ${itemsHtml}
+      `;
+
+      list.appendChild(div);
+    });
+
+  } catch (e) {
+    document.getElementById("orderList").innerHTML = "Server error";
+  }
+}
+
+loadOrders();
+</script>
+
+</body>
+</html>
