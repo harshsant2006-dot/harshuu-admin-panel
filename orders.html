@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #f2f2f2;
@@ -14,39 +18,62 @@
     }
 
     h2 {
-      margin-top: 0;
+      margin: 10px 0;
+      color: #e23744;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      background: #333;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
     .order {
       background: #fff;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 14px;
+      border-radius: 10px;
       margin-bottom: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      font-size: 12px;
-      border-radius: 5px;
-      background: #ddd;
-      margin-top: 6px;
+    .row {
+      margin: 6px 0;
+      font-size: 14px;
     }
 
     .status {
       font-weight: bold;
+      margin-top: 8px;
       color: #e23744;
     }
 
+    .items {
+      margin-top: 8px;
+      padding-left: 10px;
+      font-size: 13px;
+    }
+
     .item {
-      font-size: 14px;
-      margin-left: 10px;
+      margin-bottom: 4px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 20px;
+      color: #666;
     }
   </style>
 </head>
 
 <body>
+
+<button onclick="goBack()">⬅ Back to Admin</button>
 
 <h2>📦 Orders</h2>
 
@@ -54,6 +81,10 @@
 
 <script>
 const API = "https://harshuu2-backend.onrender.com/api";
+
+function goBack() {
+  window.location.href = "index.html";
+}
 
 async function loadOrders() {
   try {
@@ -63,8 +94,8 @@ async function loadOrders() {
     const list = document.getElementById("orderList");
     list.innerHTML = "";
 
-    if (!data.data || !data.data.length) {
-      list.innerHTML = "No orders found";
+    if (!data.data || data.data.length === 0) {
+      list.innerHTML = `<div class="empty">No orders found</div>`;
       return;
     }
 
@@ -74,24 +105,32 @@ async function loadOrders() {
 
       let itemsHtml = "";
       order.items.forEach(i => {
-        itemsHtml += `<div class="item">• ${i.name} × ${i.quantity}</div>`;
+        itemsHtml += `
+          <div class="item">
+            • ${i.name} × ${i.quantity}
+          </div>
+        `;
       });
 
       div.innerHTML = `
-        <div><b>Order #</b> ${order.orderNumber || order._id}</div>
-        <div><b>Customer:</b> ${order.customer.name}</div>
-        <div><b>Mobile:</b> ${order.customer.mobile}</div>
-        <div><b>Total:</b> ₹${order.bill?.grandTotal || order.grandTotal}</div>
+        <div class="row"><b>Order ID:</b> ${order.orderNumber || order._id}</div>
+        <div class="row"><b>Customer:</b> ${order.customer?.name || "-"}</div>
+        <div class="row"><b>Mobile:</b> ${order.customer?.mobile || "-"}</div>
+        <div class="row"><b>Total:</b> ₹${order.bill?.grandTotal || order.grandTotal || 0}</div>
         <div class="status">Status: ${order.status}</div>
-        <div class="badge">Items</div>
-        ${itemsHtml}
+
+        <div class="items">
+          <b>Items:</b>
+          ${itemsHtml}
+        </div>
       `;
 
       list.appendChild(div);
     });
 
-  } catch (e) {
-    document.getElementById("orderList").innerHTML = "Server error";
+  } catch (error) {
+    document.getElementById("orderList").innerHTML =
+      `<div class="empty">Server error while loading orders</div>`;
   }
 }
 
